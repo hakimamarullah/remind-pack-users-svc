@@ -24,6 +24,7 @@ public class OTPController {
 
     @PostMapping(value = "/send", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<String>> sendOTP(@RequestBody @Valid SendOTPRequest payload) {
-        return otpService.sendOTP(payload.getMobilePhone()).toResponseEntity();
+        otpService.sendOTPAsync(payload.getMobilePhone());
+        return ApiResponse.setSuccess("OTP Will Be Sent").toResponseEntity();
     }
 }

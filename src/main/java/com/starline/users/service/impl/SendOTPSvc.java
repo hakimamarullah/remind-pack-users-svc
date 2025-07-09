@@ -1,6 +1,5 @@
 package com.starline.users.service.impl;
 
-import com.starline.users.dto.ApiResponse;
 import com.starline.users.exceptions.TooManyOTPRequest;
 import com.starline.users.feign.WhatsAppProxySvc;
 import com.starline.users.models.RegistrationOTP;
@@ -14,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,10 +37,11 @@ public class SendOTPSvc implements OTPService {
     private Long otpMaxTimeMillis;
 
 
+    @Async
     @Transactional
     @Modifying
     @Override
-    public ApiResponse<String> sendOTP(String mobilePhone) {
+    public void sendOTPAsync(String mobilePhone) {
         mobilePhone = CommonUtils.normalizePhoneNumber(mobilePhone);
         Optional<RegistrationOTP> oldOtp = otpRepository.findByMobilePhone(mobilePhone);
 
@@ -59,12 +60,13 @@ public class SendOTPSvc implements OTPService {
         long maxOTPTime = TimeUnit.MILLISECONDS.toMinutes(otpMaxTimeMillis);
         String message = messageSource.getMessage("otp.message", new Object[]{newOTP.getCode(), maxOTPTime}, LocaleContextHolder.getLocale());
         waProxySvc.sendMessage(mobilePhone, message);
-        return ApiResponse.setResponse("Success Send OTP", 200);
+        log.info("OTP sent to {}", mobilePhone);
     }
 
     private void checkRequestInterval(RegistrationOTP oldOTP) {
         long durationCreated = Duration.between(oldOTP.getCreatedDate(), LocalDateTime.now()).toMillis();
         if (durationCreated < 30_000) {
+            log.info("Too many OTP request for {}", oldOTP.getMobilePhone());
             throw new TooManyOTPRequest();
         }
     }
