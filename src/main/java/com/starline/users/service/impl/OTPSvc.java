@@ -1,8 +1,9 @@
 package com.starline.users.service.impl;
 
+import com.starline.users.exceptions.DataNotFoundException;
 import com.starline.users.exceptions.TooManyOTPRequest;
 import com.starline.users.feign.WhatsAppProxySvc;
-import com.starline.users.models.RegistrationOTP;
+import com.starline.users.models.OTP;
 import com.starline.users.repository.RegOTPRepository;
 import com.starline.users.service.OTPService;
 import com.starline.users.utils.CommonUtils;
@@ -19,13 +20,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class SendOTPSvc implements OTPService {
+public class OTPSvc implements OTPService {
 
     private final RegOTPRepository otpRepository;
 
@@ -43,7 +45,7 @@ public class SendOTPSvc implements OTPService {
     @Override
     public void sendOTPAsync(String mobilePhone) {
         mobilePhone = CommonUtils.normalizePhoneNumber(mobilePhone);
-        Optional<RegistrationOTP> oldOtp = otpRepository.findByMobilePhone(mobilePhone);
+        Optional<OTP> oldOtp = otpRepository.findByMobilePhone(mobilePhone);
 
         oldOtp.ifPresent(this::checkRequestInterval);
         oldOtp.ifPresent(it -> {
@@ -51,7 +53,7 @@ public class SendOTPSvc implements OTPService {
             otpRepository.flush();
         });
 
-        RegistrationOTP newOTP = new RegistrationOTP();
+        OTP newOTP = new OTP();
         newOTP.setCode(RandomStringUtils.secureStrong().nextNumeric(6));
         newOTP.setMobilePhone(mobilePhone);
 
@@ -63,7 +65,27 @@ public class SendOTPSvc implements OTPService {
         log.info("OTP sent to {}", mobilePhone);
     }
 
-    private void checkRequestInterval(RegistrationOTP oldOTP) {
+    @Transactional
+    @Modifying
+    @Override
+    public boolean validateAndClearOTP(String mobilePhone, String otp) {
+        try {
+            OTP otpData = otpRepository.findByMobilePhone(CommonUtils.normalizePhoneNumber(mobilePhone))
+                    .orElseThrow(() -> new DataNotFoundException("OTP not found"));
+
+            if (Objects.equals(otpData.getCode(), otp)) {
+                long durationCreated = Duration.between(otpData.getCreatedDate(), LocalDateTime.now()).toMillis();
+                otpRepository.deleteById(otpData.getCode());
+
+                return durationCreated < otpMaxTimeMillis;
+            }
+        } catch (Exception e) {
+            log.warn("Failed to validate OTP -> {}", e.getMessage());
+        }
+        return false;
+    }
+
+    private void checkRequestInterval(OTP oldOTP) {
         long durationCreated = Duration.between(oldOTP.getCreatedDate(), LocalDateTime.now()).toMillis();
         if (durationCreated < 30_000) {
             log.info("Too many OTP request for {}", oldOTP.getMobilePhone());
