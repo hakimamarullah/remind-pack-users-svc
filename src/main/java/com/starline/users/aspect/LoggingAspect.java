@@ -2,9 +2,11 @@ package com.starline.users.aspect;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.starline.users.config.LoggingContext;
+import io.opentelemetry.api.trace.Span;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -159,7 +161,15 @@ public class LoggingAspect {
 
 
     private String getTraceId() {
-        return loggingContext.getReqId();
+        try {
+            String traceId = Span.current().getSpanContext().getTraceId();
+            if (StringUtils.isBlank(traceId)) {
+                return loggingContext.getReqId();
+            }
+            return traceId;
+        } catch (Exception e) {
+            return loggingContext.getReqId();
+        }
     }
 }
 
