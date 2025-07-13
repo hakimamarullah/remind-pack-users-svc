@@ -1,13 +1,13 @@
 package com.starline.users.feign;
 
-import com.starline.users.feign.config.FeignLogBasicConfig;
+import com.starline.users.feign.config.FeignBasicConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 
 @FeignClient(name = "${srv.feign.names.whatsapp:whatsapp}",
-        configuration = {FeignLogBasicConfig.class}
+        configuration = {FeignBasicConfig.class}
 )
 public interface WhatsAppProxySvc {
 
