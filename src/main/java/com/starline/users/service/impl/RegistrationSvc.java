@@ -12,6 +12,7 @@ import com.starline.users.repository.UserRepository;
 import com.starline.users.service.RegistrationService;
 import com.starline.users.utils.CommonUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +25,11 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@RegisterReflectionForBinding({
+        RegisterUserRequest.class,
+        ApiResponse.class,
+        RegOTPSimpleData.class
+})
 public class RegistrationSvc implements RegistrationService {
 
     private final UserRepository userRepository;

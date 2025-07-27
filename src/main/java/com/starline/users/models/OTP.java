@@ -7,11 +7,13 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Comment;
+import org.springframework.aot.hint.annotation.RegisterReflection;
 
 @Entity
 @Getter
 @Setter
 @Table(name = "OTP")
+@RegisterReflection
 public class OTP extends BaseEntity {
 
 

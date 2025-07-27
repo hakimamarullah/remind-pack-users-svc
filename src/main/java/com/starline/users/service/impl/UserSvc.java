@@ -9,10 +9,14 @@ import com.starline.users.repository.UserRepository;
 import com.starline.users.service.UserService;
 import com.starline.users.utils.CommonUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@RegisterReflectionForBinding({
+        UserInfo.class
+})
 public class UserSvc implements UserService {
 
     private final UserRepository userRepository;

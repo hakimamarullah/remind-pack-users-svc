@@ -11,6 +11,7 @@ import com.starline.users.service.OTPService;
 import com.starline.users.service.ResetPasswordService;
 import com.starline.users.utils.CommonUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,9 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@RegisterReflectionForBinding({
+        ResetPasswordRequest.class
+})
 public class ResetPasswordSvc implements ResetPasswordService {
 
     private final OTPService otpService;

@@ -6,6 +6,7 @@ import com.starline.users.dto.SendOTPRequest;
 import com.starline.users.service.OTPService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/otp")
 @RequiredArgsConstructor
 @LogRequestResponse
+@RegisterReflectionForBinding({
+        SendOTPRequest.class
+})
 public class OTPController {
 
     private final OTPService otpService;
